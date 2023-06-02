@@ -23,14 +23,20 @@ class Game
 
   def initialize
     @score = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-    @word = "fox"
+    @word = "speak"
     @letters = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-    @length = length = { 0 => "-", 1 => "-", 2 => "-", 3 => "-", 4 => "-", 5 => "-", 
-      6 => "-", 7 => "-", 8 => "-", 9 => "-", 10 => "-", 11 => "-" }    
+    @length = length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
+      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
     @guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
       6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
     @man = ["O", "|", "-", "-", "/", "\\"]
     puts "Welcome to hangman! Your word to guess is #{@word.length} letters long."
+    @length.map do |key, value|
+      if key + word.length >= 12
+        @length[key] = "-"
+      end
+    end
+    puts @length
   end
 
   def turn(word)
@@ -41,7 +47,7 @@ class Game
       word.split("").each_with_index do |letter, index|
         @guess[index + (12 - word.length)] = letter if letter == choice
       end
-    elsif @guess.values.include? choice #|| @guess.values.include? choice
+    elsif # @letters.values.include? choice || @guess.values.include? choice
       puts "You have already guessed that!"
     elsif !choice.match("[a-z]")
       puts "Invalid input! Please only select letters."
