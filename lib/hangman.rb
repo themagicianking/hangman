@@ -1,4 +1,6 @@
-module BoardGenerator
+module GameHelper
+  require "yaml"
+
   def create_board(score, guess, letters, length)
     puts "              __________"
     puts "            |           |"
@@ -15,7 +17,6 @@ module BoardGenerator
   def get_word
     dictionary = []
     word = ""
-    puts word.length
     file = File.open("google-10000-english-no-swears.txt").readlines.each do |line|
       dictionary.push(line)
     end
@@ -27,8 +28,9 @@ module BoardGenerator
 end
 
 class Game
-  include BoardGenerator
+  include GameHelper
   attr_reader :score, :word, :letters, :length, :guess, :man
+  @@times_played = -1
 
   def initialize
     @score = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
@@ -39,7 +41,6 @@ class Game
     @guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
       6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
     @man = ["O", "|", "-", "-", "/", "\\"]
-    puts "Welcome to hangman! Your word to guess is #{@word.length} letters long."
     @length.map do |key, value|
       if key + word.length >= 12
         @length[key] = "-"
@@ -48,6 +49,9 @@ class Game
   end
 
   def turn(word)
+    if 1
+      puts "Welcome to hangman! Your word to guess is #{@word.length} letters long."
+    end
     puts "Please enter a letter."
     choice = gets.chomp.downcase
     if word.include?(choice) && !@letters.values.include?(choice) && !@guess.values.include?(choice)
@@ -69,23 +73,77 @@ class Game
 
   def win_lose_continue?(guess, word, score)
     if score[5] == "\\"
+      create_board(@score, @guess, @letters, @length)
       puts "You lose!"
       puts "The word was #{word}."
       false
     elsif guess.values[(12 - word.length)..11].join("") == word
+      create_board(@score, @guess, @letters, @length)
       puts "You win!"
       false
     else
       true
     end
   end
+
+  def save_game?
+    puts "Would you like to save your game? Enter Y to save and anything to continue."
+    gets.chomp.upcase == "Y" ? true : false
+  end
+
+  def save_game_file
+    YAML.dump ({
+      :score => @score,
+      :word => @word,
+      :letters => @letters,
+      :length => @length,
+      :guess => @guess,
+      :man => @man
+    })
+  end
 end
 
-new_game = Game.new
-new_game.get_word
-new_game.create_board(new_game.score, new_game.guess, new_game.letters, new_game.length)
+class GameSaver
+  def initialize
+    if File.exists?("gameone.txt")
+      puts "Hello! Would you like to play a saved game or start a new one?"
+      puts "Select the number of the game you would like to load, or type NEW."
+    else
+      puts "Hello! would you like to start a new game?"
+    end
+  end
 
-while new_game.win_lose_continue?(new_game.guess, new_game.word, new_game.score)
-  new_game.turn(new_game.word)
-  new_game.create_board(new_game.score, new_game.guess, new_game.letters, new_game.length)
+  def play_game(game)
+    game.create_board(game.score, game.guess, game.letters, game.length)
+    while game.win_lose_continue?(game.guess, game.word, game.score)
+      game.turn(game.word)
+      game.create_board(game.score, game.guess, game.letters, game.length)
+      if game.save_game?
+        write_game_to_file(game.save_game_file)
+        break
+      else
+      end
+    end
+  end
+
+  def write_game_to_file(game)
+    if File.exists?("gamethree.text")
+      puts "Error--you can only save three games!"
+    elsif File.exists?("gametwo.txt")
+      file = File.open("gamethree.txt", "w")
+      file.puts game
+      file.close
+    elsif File.exists?("gameone.txt")
+      file = File.open("gametwo.txt", "w")
+      file.puts game
+      file.close
+    else
+      file = File.open("gameone.txt", "w")
+      file.puts game
+      file.close
+    end
+  end
 end
+
+test = GameSaver.new
+test.play_game(Game.new)
