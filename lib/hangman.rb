@@ -13,7 +13,16 @@ module BoardGenerator
   end
 
   def get_word
-    # get word from downloaded dictionary
+    dictionary = []
+    word = ""
+    puts word.length
+    file = File.open("google-10000-english-no-swears.txt").readlines.each do |line|
+      dictionary.push(line)
+    end
+    until word.length < 13 && word.length > 4
+      word = dictionary.sample.chomp
+    end
+    word
   end
 end
 
@@ -23,7 +32,7 @@ class Game
 
   def initialize
     @score = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-    @word = "speak"
+    @word = get_word
     @letters = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
     @length = length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
       6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
@@ -36,18 +45,17 @@ class Game
         @length[key] = "-"
       end
     end
-    puts @length
   end
 
   def turn(word)
     puts "Please enter a letter."
     choice = gets.chomp.downcase
-    if word.include? choice
+    if word.include?(choice) && !@letters.values.include?(choice) && !@guess.values.include?(choice)
       puts "That's correct!"
       word.split("").each_with_index do |letter, index|
         @guess[index + (12 - word.length)] = letter if letter == choice
       end
-    elsif # @letters.values.include? choice || @guess.values.include? choice
+    elsif @letters.values.include?(choice) || @guess.values.include?(choice)
       puts "You have already guessed that!"
     elsif !choice.match("[a-z]")
       puts "Invalid input! Please only select letters."
@@ -62,6 +70,7 @@ class Game
   def win_lose_continue?(guess, word, score)
     if score[5] == "\\"
       puts "You lose!"
+      puts "The word was #{word}."
       false
     elsif guess.values[(12 - word.length)..11].join("") == word
       puts "You win!"
@@ -73,6 +82,7 @@ class Game
 end
 
 new_game = Game.new
+new_game.get_word
 new_game.create_board(new_game.score, new_game.guess, new_game.letters, new_game.length)
 
 while new_game.win_lose_continue?(new_game.guess, new_game.word, new_game.score)
