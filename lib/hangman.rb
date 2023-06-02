@@ -19,14 +19,17 @@ end
 
 class Game
   include BoardGenerator
-  attr_reader :word, :letters
+  attr_reader :score, :word, :letters, :length, :guess, :man
 
   def initialize
-    @score = {}
+    @score = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
     @word = "fox"
     @letters = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-    @length = {}
-    @guess = {}
+    @length = length = { 0 => "-", 1 => "-", 2 => "-", 3 => "-", 4 => "-", 5 => "-", 
+      6 => "-", 7 => "-", 8 => "-", 9 => "-", 10 => "-", 11 => "-" }    
+    @guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
+      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
+    @man = ["O", "|", "-", "-", "/", "\\"]
     puts "Welcome to hangman! Your word to guess is #{@word.length} letters long."
   end
 
@@ -38,14 +41,14 @@ class Game
       word.split("").each_with_index do |letter, index|
         @guess[index + (12 - word.length)] = letter if letter == choice
       end
-      puts @guess
-    elsif @guess.values.include? choice
+    elsif @guess.values.include? choice #|| @guess.values.include? choice
       puts "You have already guessed that!"
     elsif !choice.match("[a-z]")
       puts "Invalid input! Please only select letters."
     else
       @letters[@letters.key(" ")] = choice
-      puts @letters
+      @score[@score.key(" ")] = man[0]
+      man.delete_at(0)
       puts "Incorrect. You have #{@letters.values.count(" ")} guesses remaining."
     end
   end
@@ -54,7 +57,7 @@ class Game
     if score[5] == "\\"
       puts "You lose!"
       false
-    elsif guess.values == word
+    elsif guess.values[(12 - word.length)..11].join("") == word
       puts "You win!"
       false
     else
@@ -63,14 +66,10 @@ class Game
   end
 end
 
-score = { 0 => "O", 1 => "|", 2 => "-", 3 => "-", 4 => "/", 5 => "\\" }
-word = "fox"
-guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
-  6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => "t" }
-length = { 0 => "-", 1 => "-", 2 => "-", 3 => "-", 4 => "-", 5 => "-", 
-  6 => "-", 7 => "-", 8 => "-", 9 => "-", 10 => "-", 11 => "-" }
-
 new_game = Game.new
-new_game.create_board(score, guess, new_game.letters, length)
-new_game.turn(new_game.word)
-new_game.win_lose_continue?(guess, word, score)
+new_game.create_board(new_game.score, new_game.guess, new_game.letters, new_game.length)
+
+while new_game.win_lose_continue?(new_game.guess, new_game.word, new_game.score)
+  new_game.turn(new_game.word)
+  new_game.create_board(new_game.score, new_game.guess, new_game.letters, new_game.length)
+end
