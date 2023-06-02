@@ -1,5 +1,12 @@
 module GameHelper
   require "yaml"
+  SCORE = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
+  LETTERS = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
+  LENGTH = length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
+      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
+  GUESS = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
+      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
+   MAN = ["O", "|", "-", "-", "/", "\\"]
 
   def create_board(score, guess, letters, length)
     puts "              __________"
@@ -32,15 +39,13 @@ class Game
   attr_reader :score, :word, :letters, :length, :guess, :man
   @@times_played = -1
 
-  def initialize
-    @score = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-    @word = get_word
-    @letters = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-    @length = length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
-      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
-    @guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
-      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
-    @man = ["O", "|", "-", "-", "/", "\\"]
+  def initialize(score, word, letters, length, guess, man)
+    @score = score
+    @word = word
+    @letters = letters
+    @length = length    
+    @guess = guess
+    @man = man
     @length.map do |key, value|
       if key + word.length >= 12
         @length[key] = "-"
@@ -104,12 +109,32 @@ class Game
 end
 
 class GameSaver
+  attr_reader :new_game, :game_file
+
   def initialize
+    @new_game = false
     if File.exists?("gameone.txt")
       puts "Hello! Would you like to play a saved game or start a new one?"
       puts "Select the number of the game you would like to load, or type NEW."
+      puts "> GAME ONE"
+      puts "> GAME TWO" if File.exists?("gametwo.txt")
+      puts "> GAME THREE" if File.exists?("gamethree.txt")
+      #delete the game as soon as loaded
     else
       puts "Hello! would you like to start a new game?"
+      @new_game = true
+    end
+    if gets.chomp == "1"
+      data = YAML.load File.read("gameone.txt")
+      @game_file = Game.new(data[:score], data[:word], data[:letters], data[:length], data[:guess], data[:man])
+    elsif gets.chomp == "2"
+      @game_file = "gametwo.txt"
+    elsif gets.chomp == "3"
+      @game_file = "gamethree.txt"
+    elsif gets.chomp.upcase == "NEW"
+      @new_game = true
+    else
+      # exception handling here
     end
   end
 
@@ -127,18 +152,18 @@ class GameSaver
   end
 
   def write_game_to_file(game)
-    if File.exists?("gamethree.text")
+    if File.exists?("gamethree.text") && File.exists?("gametwo.txt") && File.exists?("gameone.txt")
       puts "Error--you can only save three games!"
-    elsif File.exists?("gametwo.txt")
-      file = File.open("gamethree.txt", "w")
+    elsif !File.exists?("gameone.text")
+      file = File.open("gameone.txt", "w")
       file.puts game
       file.close
-    elsif File.exists?("gameone.txt")
+    elsif !File.exists?("gametwo.txt")
       file = File.open("gametwo.txt", "w")
       file.puts game
       file.close
     else
-      file = File.open("gameone.txt", "w")
+      file = File.open("gamethree.txt", "w")
       file.puts game
       file.close
     end
@@ -146,4 +171,9 @@ class GameSaver
 end
 
 test = GameSaver.new
-test.play_game(Game.new)
+
+if test.new_game == true
+  test.play_game(test)
+else
+  test.play_game(test.game_file)
+end
