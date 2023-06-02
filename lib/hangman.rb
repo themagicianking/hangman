@@ -19,12 +19,12 @@ end
 
 class Game
   include BoardGenerator
+  attr_reader :word, :letters
 
   def initialize
     @score = {}
-    # get a word
     @word = "fox"
-    @letters = {}
+    @letters = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
     @length = {}
     @guess = {}
     puts "Welcome to hangman! Your word to guess is #{@word.length} letters long."
@@ -44,8 +44,21 @@ class Game
     elsif !choice.match("[a-z]")
       puts "Invalid input! Please only select letters."
     else
-      puts "Incorrect. You have #{} guesses remaining."
-      # get number of guessses from letters remaining
+      @letters[@letters.key(" ")] = choice
+      puts @letters
+      puts "Incorrect. You have #{@letters.values.count(" ")} guesses remaining."
+    end
+  end
+
+  def win_lose_continue?(guess, word, score)
+    if score[5] == "\\"
+      puts "You lose!"
+      false
+    elsif guess.values == word
+      puts "You win!"
+      false
+    else
+      true
     end
   end
 end
@@ -54,10 +67,10 @@ score = { 0 => "O", 1 => "|", 2 => "-", 3 => "-", 4 => "/", 5 => "\\" }
 word = "fox"
 guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
   6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => "t" }
-letters = { 0 => "e" ", ", 1 => "g" ", ", 2 => "j" ", ", 3 => "k" ", ", 4 => "l" ", ", 5 => "m" }
 length = { 0 => "-", 1 => "-", 2 => "-", 3 => "-", 4 => "-", 5 => "-", 
   6 => "-", 7 => "-", 8 => "-", 9 => "-", 10 => "-", 11 => "-" }
 
 new_game = Game.new
-new_game.create_board(score, guess, letters, length)
-new_game.turn("fox")
+new_game.create_board(score, guess, new_game.letters, length)
+new_game.turn(new_game.word)
+new_game.win_lose_continue?(guess, word, score)
