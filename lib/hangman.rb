@@ -1,12 +1,13 @@
 module GameHelper
   require "yaml"
+
   SCORE = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
   LETTERS = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
   LENGTH = length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
       6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
   GUESS = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
       6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
-   MAN = ["O", "|", "-", "-", "/", "\\"]
+  MAN = ["O", "|", "-", "-", "/", "\\"]
 
   def create_board(score, guess, letters, length)
     puts "              __________"
@@ -59,7 +60,9 @@ class Game
     end
     puts "Please enter a letter."
     choice = gets.chomp.downcase
-    if word.include?(choice) && !@letters.values.include?(choice) && !@guess.values.include?(choice)
+    if choice == ""
+      puts "You must enter a letter!"
+    elsif word.include?(choice) && !@letters.values.include?(choice) && !@guess.values.include?(choice)
       puts "That's correct!"
       word.split("").each_with_index do |letter, index|
         @guess[index + (12 - word.length)] = letter if letter == choice
@@ -68,6 +71,8 @@ class Game
       puts "You have already guessed that!"
     elsif !choice.match("[a-z]")
       puts "Invalid input! Please only select letters."
+    elsif choice.length > 1
+      puts "Invalid input! Guess must only be one letter."
     else
       @letters[@letters.key(" ")] = choice
       @score[@score.key(" ")] = man[0]
@@ -109,32 +114,43 @@ class Game
 end
 
 class GameSaver
-  attr_reader :new_game, :game_file
+  include GameHelper
+  attr_reader :new_game, :game_file, :exit
+  attr_writer :exit
 
   def initialize
-    @new_game = false
-    if File.exists?("gameone.txt")
+    @exit = false
+    if File.exists?("gameone.txt") || File.exists?("gametwo.txt") || File.exists?("gamethree.txt")
       puts "Hello! Would you like to play a saved game or start a new one?"
-      puts "Select the number of the game you would like to load, or type NEW."
-      puts "> GAME ONE"
+      puts "Select the number of the game you would like to load, or type NEW. Type EXIT to terminate."
+      puts "> GAME ONE" if File.exists?("gameone.txt")
       puts "> GAME TWO" if File.exists?("gametwo.txt")
       puts "> GAME THREE" if File.exists?("gamethree.txt")
-      #delete the game as soon as loaded
     else
-      puts "Hello! would you like to start a new game?"
-      @new_game = true
+      puts "Hello! would you like to start a new game? Please type NEW to start a new game and EXIT to terminate."
     end
-    if gets.chomp == "1"
+    choice = gets.chomp.upcase
+    until choice.to_i == 1 || choice.to_i == 2 || choice.to_i == 3 || choice == "NEW" || choice == "EXIT"
+      puts "Invalid input! Please try again."
+      choice = gets.chomp.upcase
+    end
+    if choice == "1"
       data = YAML.load File.read("gameone.txt")
       @game_file = Game.new(data[:score], data[:word], data[:letters], data[:length], data[:guess], data[:man])
-    elsif gets.chomp == "2"
-      @game_file = "gametwo.txt"
-    elsif gets.chomp == "3"
-      @game_file = "gamethree.txt"
-    elsif gets.chomp.upcase == "NEW"
-      @new_game = true
+      File.delete("gameone.txt")
+    elsif choice == "2"
+      data = YAML.load File.read("gametwo.txt")
+      @game_file = Game.new(data[:score], data[:word], data[:letters], data[:length], data[:guess], data[:man])
+      File.delete("gametwo.txt")
+    elsif choice == "3"
+      data = YAML.load File.read("gamethree.txt")
+      @game_file = Game.new(data[:score], data[:word], data[:letters], data[:length], data[:guess], data[:man])
+      File.delete("gamethree.txt")
+    elsif choice == "NEW"
+      @game_file = Game.new(SCORE, get_word, LETTERS, LENGTH, GUESS, MAN)
     else
-      # exception handling here
+      puts "Goodbye!"
+      @exit = true
     end
   end
 
@@ -168,12 +184,16 @@ class GameSaver
       file.close
     end
   end
+
+  def continue?
+    puts "Would you like to play again? Enter EXIT to close the game and anything to continue."
+    gets.chomp.upcase == "EXIT" ? true : false
+  end
 end
 
-test = GameSaver.new
+game = GameSaver.new
 
-if test.new_game == true
-  test.play_game(test)
-else
-  test.play_game(test.game_file)
+until game.exit == true
+  game.play_game(game.game_file)
+  game.exit = game.continue?
 end
