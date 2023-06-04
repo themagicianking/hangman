@@ -1,14 +1,6 @@
 module GameHelper
   require "yaml"
 
-  SCORE = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-  LETTERS = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
-  LENGTH = length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
-      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
-  GUESS = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
-      6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
-  MAN = ["O", "|", "-", "-", "/", "\\"]
-
   def create_board(score, guess, letters, length)
     puts "              __________"
     puts "            |           |"
@@ -120,6 +112,9 @@ class GameSaver
 
   def initialize
     @exit = false
+  end
+
+  def load_games
     if File.exists?("gameone.txt") || File.exists?("gametwo.txt") || File.exists?("gamethree.txt")
       puts "Hello! Would you like to play a saved game or start a new one?"
       puts "Select the number of the game you would like to load, or type NEW. Type EXIT to terminate."
@@ -147,7 +142,14 @@ class GameSaver
       @game_file = Game.new(data[:score], data[:word], data[:letters], data[:length], data[:guess], data[:man])
       File.delete("gamethree.txt")
     elsif choice == "NEW"
-      @game_file = Game.new(SCORE, get_word, LETTERS, LENGTH, GUESS, MAN)
+      score = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
+      letters = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " " }
+      length = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
+        6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }    
+      guess = { 0 => " ", 1 => " ", 2 => " ", 3 => " ", 4 => " ", 5 => " ", 
+        6 => " ", 7 => " ", 8 => " ", 9 => " ", 10 => " ", 11 => " " }
+      man = ["O", "|", "-", "-", "/", "\\"]
+      @game_file = Game.new(score, get_word, letters, length, guess, man)
     else
       puts "Goodbye!"
       @exit = true
@@ -162,23 +164,23 @@ class GameSaver
       if game.save_game?
         write_game_to_file(game.save_game_file)
         break
-      else
       end
     end
   end
 
   def write_game_to_file(game)
-    if File.exists?("gamethree.text") && File.exists?("gametwo.txt") && File.exists?("gameone.txt")
+    if File.exists?("gamethree.txt") && File.exists?("gametwo.txt") && File.exists?("gameone.txt")
       puts "Error--you can only save three games!"
-    elsif !File.exists?("gameone.text")
+    elsif (File.exists?("gameone.text")) == false
       file = File.open("gameone.txt", "w")
       file.puts game
       file.close
-    elsif !File.exists?("gametwo.txt")
+    elsif (File.exists?("gametwo.txt")) == false
       file = File.open("gametwo.txt", "w")
       file.puts game
       file.close
     else
+      puts "i am here"
       file = File.open("gamethree.txt", "w")
       file.puts game
       file.close
@@ -193,7 +195,11 @@ end
 
 game = GameSaver.new
 
-until game.exit == true
+while game.exit == false
+  game.load_games
+  if game.exit == true
+    break
+  end
   game.play_game(game.game_file)
   game.exit = game.continue?
 end
